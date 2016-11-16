@@ -26,19 +26,19 @@
 
 VER = 0.9.20
 ARCH = win64
-DEBUG = no
+DEBUG = yes
 BRANCH = v$(VER)-$(ARCH)
-MSVSVER =
+MSVSVER = 140
 MSVCROOT = $(VCINSTALLDIR)
-WINSDKROOT = $(WINDOWSSDKDIR)
+#WINSDKROOT = $(WINDOWSSDKDIR)
 GIT = git
 
 !if "$(MSVCROOT)" == ""
-MSVCROOT = C:\Program Files\Microsoft Visual Studio 10.0\VC
+MSVCROOT = C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
 !endif
 
 !if "$(WINSDKROOT)" == ""
-WINSDKROOT = C:\Program Files\Microsoft SDKs\Windows\v7.0A
+WINSDKROOT = C:\Program Files (x86)\Windows Kits\10\
 !endif
 
 !include make/nmake_helper.mak
@@ -47,18 +47,19 @@ WINSDKROOT = C:\Program Files\Microsoft SDKs\Windows\v7.0A
 !if "$(ARCH)" == "win32"
 !message === COMPILING FOR 32-BIT
 
-MATLABROOT = C:\Program Files (x86)\MATLAB\R2010b
+MATLABROOT = D:\Program Files\MATLAB\MATLAB Production Server\R2015a
 MEX = "$(MATLABROOT)\bin\mex.bat"
-MEXOPT = "$(MATLABROOT)\bin\win32\mexopts\msvc$(MSVSVER)opts.bat"
+#MEXOPT = "$(MATLABROOT)\bin\win64\mexopts\msvc$(MSVSVER)opts.bat"
+MEXOPT = "$(MATLABROOT)\bin\win64\mexopts\msvc110opts.bat"
 MEXEXT = mexw32
 MEX_FLAGS =
 
-CC = "$(MSVCROOT)\bin\cl.exe"
-LINK = "$(MSVCROOT)\bin\link.exe"
-MSVCR_PATH = $(MSVCROOT)\redist\x86\Microsoft.VC$(MSVSVER).CRT
+CC = "$(MSVCROOT)bin\cl.exe"
+LINK = "$(MSVCROOT)bin\link.exe"
+MSVCR_PATH = $(MSVCROOT)redist\x86\Microsoft.VC$(MSVSVER).CRT
 
 LFLAGS = /MACHINE:X86 \
-         /LIBPATH:"$(MSVCROOT)\lib" \
+         /LIBPATH:"$(MSVCROOT)lib" \
          /LIBPATH:"$(WINSDKROOT)\lib"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 64-bit
@@ -71,17 +72,18 @@ MEXOPT = "$(MATLABROOT)\bin\win64\mexopts\msvc$(MSVSVER)opts.bat"
 MEXEXT = mexw64
 MEX_FLAGS = -largeArrayDims
 
-CC = "$(MSVCROOT)\bin\amd64\cl.exe"
-LINK = "$(MSVCROOT)\bin\amd64\link.exe"
+CC = "$(MSVCROOT)bin\amd64\cl.exe"
+LINK = "$(MSVCROOT)bin\amd64\link.exe"
 !if $(MSVSVER) >= 100
-MSVCR_PATH = $(MSVCROOT)\redist\x64\Microsoft.VC$(MSVSVER).CRT
+MSVCR_PATH = $(MSVCROOT)redist\x64\Microsoft.VC$(MSVSVER).CRT
 !else
-MSVCR_PATH = $(MSVCROOT)\redist\amd64\Microsoft.VC$(MSVSVER).CRT
+MSVCR_PATH = $(MSVCROOT)redist\amd64\Microsoft.VC$(MSVSVER).CRT
 !endif
 
 LFLAGS = /MACHINE:X64 \
-         /LIBPATH:"$(MSVCROOT)\lib\amd64" \
-         /LIBPATH:"$(WINSDKROOT)\lib\x64"
+         /LIBPATH:"$(MSVCROOT)lib\amd64" \
+         /LIBPATH:"$(WINSDKROOT)\Lib\10.0.14393.0\ucrt\x64" \
+		 /LIBPATH:"$(WINSDKROOT)\Lib\10.0.14393.0\um\x64"
 !else
 !error ARCH = $(ARCH) is an unknown architecture.
 !endif
@@ -454,7 +456,7 @@ $(bindir)\vl.lib : $(libobj)
 $(bindir)\$(MSVCR).manifest : "$(MSVCR_PATH)\$(MSVCR).manifest"
         copy $(**) "$(@)"
 
-$(bindir)\msvcr$(MSVSVER).dll: "$(MSVCR_PATH)\msvcr$(MSVSVER).dll"
+$(bindir)\msvcr$(MSVSVER).dll: "$(MSVCR_PATH)\msvcp$(MSVSVER).dll"
         copy $(**) "$(@)"
 
 # --------------------------------------------------------------------
@@ -533,7 +535,7 @@ $(mexdir)\vl.dll : $(bindir)\vl.dll
 $(mexdir)\$(MSVCR).manifest : "$(MSVCR_PATH)\$(MSVCR).manifest"
         copy $(**) "$(@)"
 
-$(mexdir)\msvcr$(MSVSVER).dll: "$(MSVCR_PATH)\msvcr$(MSVSVER).dll"
+$(mexdir)\msvcr$(MSVSVER).dll: "$(MSVCR_PATH)\msvcp$(MSVSVER).dll"
         copy $(**) "$(@)"
 
 # --------------------------------------------------------------------
@@ -541,11 +543,11 @@ $(mexdir)\msvcr$(MSVSVER).dll: "$(MSVCR_PATH)\msvcr$(MSVSVER).dll"
 # --------------------------------------------------------------------
 
 bin-release:
-	echo Fetching remote tags && \
+	@echo Fetching remote tags && \
 	$(GIT) fetch --tags && \
-	echo Checking out v$(VER) && \
+	@echo Checking out v$(VER) && \
 	$(GIT) checkout v$(VER)
-	echo Rebuilding binaries for release
+	@echo Rebuilding binaries for release
 	if exist "bin\$(ARCH)" del /f /Q "bin\$(ARCH)"
 	if exist "bin\mex\$(ARCH)" del /f /Q "toolbox\mex$(ARCH)"
 	nmake /f Makefile.mak ARCH=$(ARCH)

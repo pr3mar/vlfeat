@@ -1,3 +1,5 @@
+.vs/*
+*.sdf
 # Mac OS X Finder
 .DS_Store
 
