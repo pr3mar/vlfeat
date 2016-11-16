@@ -309,11 +309,14 @@ defined(__DOXYGEN__)
 #endif
 /** @} */
 
+//_MSC_VER 1900 is vs2015, snprintf is now defined
 #if defined(VL_COMPILER_MSC) & ! defined(__DOXYGEN__)
 #  define VL_UNUSED
 #  define VL_INLINE static __inline
-//#  define snprintf _snprintf
-//#  define isnan _isnan
+#  if _MSC_VER <= 1800
+#    define snprintf _snprintf
+#  endif
+#  define isnan _isnan
 #  ifdef VL_BUILD_DLL
 #    ifdef __cplusplus
 #      define VL_EXPORT extern "C" __declspec(dllexport)
